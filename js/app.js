@@ -13,6 +13,7 @@ const App = (() => {
     [/^\/factura\/([\w-]+)$/, 'factura'],
     [/^\/registro$/, 'registro'],
     [/^\/login$/, 'login'],
+    [/^\/recuperar$/, 'recuperar'],
     [/^\/cuenta$/, 'cuenta'],
     [/^\/proveedor$/, 'proveedor'],
     [/^\/mayoreo\/([\w-]+)$/, 'mayoreo'],

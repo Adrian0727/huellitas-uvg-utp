@@ -137,6 +137,62 @@ const Store = (() => {
 
   function cerrarSesion() { db.sesion = null; guardar(); }
 
+  /* Editar perfil: revisa que el correo o RUC nuevo no sea de otra cuenta */
+  function actualizarPerfil(datos) {
+    const u = usuario();
+    if (!u) return { ok: false };
+    const correo = normal(datos.correo).trim();
+    const otro = db.usuarios.find((x) => x.id !== u.id && (normal(x.correo) === correo ||
+      (datos.ruc && x.ruc && normal(x.ruc) === normal(datos.ruc))));
+    if (otro) return { ok: false, error: 'existe' };
+    ['nombre', 'correo', 'telefono', 'direccion', 'negocio', 'ruc'].forEach((k) => {
+      if (datos[k] !== undefined) u[k] = datos[k].trim();
+    });
+    // El nombre del negocio también aparece como vendedor en sus productos
+    if (u.rol === 'proveedor') db.productos.filter((p) => p.vendedorId === u.id).forEach((p) => { p.vendedor = u.negocio || u.nombre; });
+    guardar();
+    return { ok: true };
+  }
+
+  function cambiarClave(actual, nueva) {
+    const u = usuario();
+    if (!u || u.clave !== actual) return { ok: false };
+    u.clave = nueva;
+    guardar();
+    return { ok: true };
+  }
+
+  /* Recuperar contraseña (modo de prueba: sin servidor de correo, el código se muestra en pantalla).
+     El código vive solo en memoria: vence en 10 minutos y permite 5 intentos. */
+  let recuperacion = null;
+  function iniciarRecuperacion(correo) {
+    const u = db.usuarios.find((x) => normal(x.correo) === normal(correo).trim());
+    if (!u) return { ok: false };
+    const codigo = String(Math.floor(100000 + Math.random() * 900000));
+    recuperacion = { id: u.id, codigo, vence: Date.now() + 10 * 60 * 1000, intentos: 0 };
+    return { ok: true, codigo };
+  }
+  function restablecerClave(codigo, nueva) {
+    if (!recuperacion) return { ok: false, error: 'sin-codigo' };
+    if (Date.now() > recuperacion.vence) { recuperacion = null; return { ok: false, error: 'vencido' }; }
+    if (recuperacion.codigo !== codigo.trim()) {
+      recuperacion.intentos += 1;
+      const quedan = 5 - recuperacion.intentos;
+      if (quedan <= 0) { recuperacion = null; return { ok: false, error: 'intentos' }; }
+      return { ok: false, error: 'codigo', quedan };
+    }
+    const u = db.usuarios.find((x) => x.id === recuperacion.id);
+    u.clave = nueva;
+    recuperacion = null;
+    guardar();
+    return { ok: true, correo: u.correo };
+  }
+
+  function guardarPago(resumen) {
+    const u = usuario();
+    if (u) { u.pago = resumen; guardar(); }
+  }
+
   function quitarPagoGuardado() {
     const u = usuario();
     if (u) { u.pago = null; guardar(); }
@@ -304,7 +360,7 @@ const Store = (() => {
   cargar();
   return {
     reiniciar, productos, producto, disponibles, proximos, buscar, sugerencias, normal,
-    usuario, esNegocio, registrar, iniciarSesion, cerrarSesion, quitarPagoGuardado,
+    usuario, esNegocio, registrar, iniciarSesion, cerrarSesion, quitarPagoGuardado, actualizarPerfil, cambiarClave, guardarPago, iniciarRecuperacion, restablecerClave,
     carrito, cantidadCarrito, agregar, cambiarCantidad, eliminar, totales, pagar, pedido, misPedidos,
     misProductos, productoRepetido, publicar, reabastecer,
     MINIMO_MAYOREO, tarifa, solicitarMayoreo, misSolicitudes,

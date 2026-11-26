@@ -489,6 +489,7 @@ Vistas.login = {
           <label class="field">Correo electrónico<input name="correo" type="email" autocomplete="email" value="${esc(q.correo || '')}"></label>
           <label class="field">Contraseña<input name="clave" type="password" autocomplete="current-password"></label>
           <div id="login-error" class="notice bad" hidden>${icon('alert', 20)}<span>Correo o contraseña incorrectos.</span></div>
+          <a class="link small" href="#/recuperar" style="align-self:flex-end">¿Olvidaste tu contraseña?</a>
           <button class="btn pri full" type="submit">Entrar</button>
           <p class="small muted" style="text-align:center">¿No tienes cuenta? <a class="link" href="#/registro">Regístrate</a></p>
         </form>
@@ -513,26 +514,143 @@ Vistas.login = {
   }
 };
 
-/* ===================== MI CUENTA ===================== */
+/* ===================== RECUPERAR CONTRASEÑA ===================== */
+Vistas.recuperar = {
+  titulo: 'Recuperar contraseña',
+  html(_, q) {
+    const paso2 = q.paso === '2' && q.correo;
+    return `<div class="wrap" style="display:flex;justify-content:center;padding-top:40px">
+      <div class="stack" style="width:100%;max-width:460px;gap:22px">
+        <a class="row link small" href="#/login">${icon('left', 16)}Volver a iniciar sesión</a>
+        <div><h1 style="font-size:40px">Recuperar contraseña</h1>
+          <p class="muted" style="margin-top:6px">${paso2 ? 'Escribe el código que te enviamos y tu nueva contraseña.' : 'Escribe el correo de tu cuenta y te enviaremos un código de 6 dígitos.'}</p></div>
+        ${paso2 ? `
+        <div class="notice info" id="codigo-demo" hidden>${icon('info', 20)}<span></span></div>
+        <form id="f-rec2" class="card stack" style="padding:28px" novalidate>
+          <p class="small muted">Código enviado a <b style="color:var(--ink)">${esc(q.correo)}</b>. Vence en 10 minutos.</p>
+          <label class="field">Código de 6 dígitos<input name="codigo" inputmode="numeric" maxlength="6" autocomplete="one-time-code" placeholder="000000" style="letter-spacing:.3em;font-weight:600"></label>
+          <label class="field">Nueva contraseña<input name="nueva" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"></label>
+          <label class="field">Repite la nueva contraseña<input name="repite" type="password" autocomplete="new-password"></label>
+          <button class="btn pri full" type="submit">Cambiar contraseña</button>
+          <button class="link small" type="button" id="reenviar" style="align-self:center">Enviar un código nuevo</button>
+        </form>` : `
+        <form id="f-rec1" class="card stack" style="padding:28px" novalidate>
+          <label class="field">Correo electrónico<input name="correo" type="email" autocomplete="email" value="${esc(q.correo || '')}"></label>
+          <button class="btn pri full" type="submit">Enviar código</button>
+        </form>`}
+      </div></div>`;
+  },
+  init(_, q) {
+    // Modo de prueba: no hay servidor de correo, así que el código se muestra en pantalla
+    const mostrarCodigo = (codigo) => {
+      const n = document.getElementById('codigo-demo');
+      if (!n) return;
+      n.hidden = false;
+      n.querySelector('span').innerHTML = `<b>Modo de prueba:</b> esta página no tiene servidor de correo, así que el código aparece aquí. Tu código es <b style="letter-spacing:.15em">${codigo}</b>`;
+    };
+    const f1 = document.getElementById('f-rec1');
+    if (f1) {
+      f1.correo.focus();
+      f1.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!validar(f1, { correo: reglas.correo })) return;
+        const r = Store.iniciarRecuperacion(f1.correo.value);
+        if (!r.ok) { marcarError(f1.correo, 'No encontramos una cuenta con este correo.'); f1.correo.focus(); return; }
+        Vistas.recuperar.ultimoCodigo = r.codigo;
+        location.hash = '#/recuperar?paso=2&correo=' + encodeURIComponent(f1.correo.value.trim());
+      });
+    }
+    const f2 = document.getElementById('f-rec2');
+    if (f2) {
+      if (Vistas.recuperar.ultimoCodigo) mostrarCodigo(Vistas.recuperar.ultimoCodigo);
+      else { location.hash = '#/recuperar?correo=' + encodeURIComponent(q.correo); return; }  // si recargó la página, empieza de nuevo
+      f2.codigo.focus();
+      f2.codigo.addEventListener('input', () => { f2.codigo.value = f2.codigo.value.replace(/\D/g, '').slice(0, 6); });
+      document.getElementById('reenviar').addEventListener('click', () => {
+        const r = Store.iniciarRecuperacion(q.correo);
+        if (r.ok) { Vistas.recuperar.ultimoCodigo = r.codigo; mostrarCodigo(r.codigo); aviso('Enviamos un código nuevo'); }
+      });
+      f2.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!validar(f2, { codigo: (v) => (/^\d{6}$/.test(v) ? '' : 'Escribe los 6 dígitos.'), nueva: reglas.clave, repite: (v, f) => (v === f.nueva.value ? '' : 'Las contraseñas no coinciden.') })) return;
+        const r = Store.restablecerClave(f2.codigo.value, f2.nueva.value);
+        if (r.ok) {
+          Vistas.recuperar.ultimoCodigo = null;
+          return modal({ icono: 'check', tono: 'verde', titulo: 'Contraseña cambiada', texto: 'Ya puedes iniciar sesión con tu nueva contraseña.',
+            botones: [{ texto: 'Iniciar sesión', clase: 'pri', accion: () => { location.hash = '#/login?correo=' + encodeURIComponent(r.correo); } }] });
+        }
+        if (r.error === 'codigo') { marcarError(f2.codigo, `Código incorrecto. Te quedan ${r.quedan} ${r.quedan === 1 ? 'intento' : 'intentos'}.`); f2.codigo.select(); return; }
+        Vistas.recuperar.ultimoCodigo = null;
+        modal({ icono: 'alert', tono: 'ambar',
+          titulo: r.error === 'vencido' ? 'El código venció' : 'Demasiados intentos',
+          texto: 'Por seguridad, pide un código nuevo para continuar.',
+          botones: [{ texto: 'Pedir código nuevo', clase: 'pri', accion: () => { location.hash = '#/recuperar?correo=' + encodeURIComponent(q.correo); } }] });
+      });
+    }
+  }
+};
+
+/* ===================== MI CUENTA (ver y editar datos) ===================== */
 Vistas.cuenta = {
   titulo: 'Mi cuenta',
-  html() {
+  html(_, q) {
     const u = Store.usuario();
     if (!u) { setTimeout(() => pedirSesion('#/cuenta')); return ''; }
+    const editar = q.editar || '';
     const pedidos = Store.misPedidos();
     const sol = Store.misSolicitudes();
+    const negocio = !!u.negocio || ['pequeno_negocio', 'empresa', 'proveedor'].includes(u.rol);
+    const campo = (n, et, valor, extra = '', clase = '') => `<label class="field ${clase}">${et}<input name="${n}" value="${esc(valor || '')}" ${extra}></label>`;
+    const fila = (k, v) => `<div class="between"><span class="muted">${k}</span><span style="text-align:right">${esc(v || '—')}</span></div>`;
+
+    const datos = editar === 'datos' ? `
+      <form id="f-datos" class="card form" style="padding:24px" novalidate>
+        <h3 class="span2">Editar mis datos</h3>
+        ${negocio ? campo('negocio', 'Nombre del negocio', u.negocio, 'autocomplete="organization"') + campo('ruc', 'RUC', u.ruc) : ''}
+        ${campo('nombre', negocio ? 'Nombre del encargado' : 'Nombre completo', u.nombre, 'autocomplete="name"')}
+        ${campo('telefono', 'Teléfono', u.telefono, 'inputmode="tel" autocomplete="tel"')}
+        ${campo('correo', 'Correo electrónico', u.correo, 'type="email" autocomplete="email"', 'span2')}
+        ${campo('direccion', negocio ? 'Dirección del negocio' : 'Dirección de entrega', u.direccion, 'autocomplete="street-address"', 'span2')}
+        <div class="row span2" style="flex-wrap:wrap"><button class="btn pri" type="submit">Guardar cambios</button><a class="btn line" href="#/cuenta">Cancelar</a></div>
+      </form>` : `
+      <section class="card stack" style="padding:24px;gap:10px">
+        <div class="between"><h3>Mis datos</h3><a class="btn soft sm" href="#/cuenta?editar=datos" id="btn-editar">Editar</a></div>
+        ${u.negocio ? fila('Negocio', u.negocio) + fila('RUC', u.ruc) : ''}
+        ${fila('Nombre', u.nombre)}${fila('Correo', u.correo)}${fila('Teléfono', u.telefono)}${fila('Dirección', u.direccion)}
+        <div class="hr"></div>
+        <a class="link small" href="#/cuenta?editar=clave" style="align-self:flex-start">Cambiar contraseña</a>
+      </section>`;
+
+    const clave = editar === 'clave' ? `
+      <form id="f-clave" class="card stack" style="padding:24px" novalidate>
+        <h3>Cambiar contraseña</h3>
+        <label class="field">Contraseña actual<input name="actual" type="password" autocomplete="current-password"></label>
+        <label class="field">Nueva contraseña<input name="nueva" type="password" autocomplete="new-password" placeholder="Mínimo 6 caracteres"></label>
+        <label class="field">Repite la nueva contraseña<input name="repite" type="password" autocomplete="new-password"></label>
+        <div class="row" style="flex-wrap:wrap"><button class="btn pri" type="submit">Cambiar contraseña</button><a class="btn line" href="#/cuenta">Cancelar</a></div>
+      </form>` : '';
+
+    const pago = editar === 'pago' ? `
+      <form id="f-tarjeta" class="card form" style="padding:24px" novalidate>
+        <h3 class="span2">${u.pago ? 'Cambiar tarjeta guardada' : 'Agregar tarjeta'}</h3>
+        ${campo('titular', 'Nombre en la tarjeta', u.pago ? u.pago.titular : u.nombre, 'autocomplete="cc-name"', 'span2')}
+        ${campo('numero', 'Número de tarjeta', '', 'inputmode="numeric" autocomplete="cc-number" placeholder="0000 0000 0000 0000"', 'span2')}
+        ${campo('vence', 'Vencimiento', '', 'inputmode="numeric" autocomplete="cc-exp" placeholder="MM/AA"')}
+        <p class="small muted" style="align-self:end">Solo guardamos la marca y los últimos 4 dígitos.</p>
+        <div class="row span2" style="flex-wrap:wrap"><button class="btn pri" type="submit">Guardar tarjeta</button><a class="btn line" href="#/cuenta">Cancelar</a></div>
+      </form>` : `
+      <section class="card stack" style="padding:24px;gap:10px">
+        <h3>Forma de pago guardada</h3>
+        ${u.pago ? `<div class="between"><span class="row">${icon('card', 22)}${esc(u.pago.marca)} •••• ${esc(u.pago.ultimos)}</span><span class="muted small">Vence ${esc(u.pago.vence)}</span></div>
+          <div class="row" style="flex-wrap:wrap"><a class="btn soft sm" href="#/cuenta?editar=pago">Cambiar tarjeta</a><button class="btn line sm" id="quitar-pago">Quitar</button></div>`
+          : `<p class="muted">No tienes una tarjeta guardada.</p><a class="btn soft sm" href="#/cuenta?editar=pago" style="align-self:flex-start">${icon('plus', 18)}Agregar tarjeta</a>`}
+      </section>`;
+
     return `<div class="wrap" style="padding-top:40px">
       <div class="between" style="flex-wrap:wrap;margin-bottom:24px"><div><h1 style="font-size:40px">Mi cuenta</h1><span class="pill p-green" style="margin-top:8px">${ROLES[u.rol]?.nombre || 'Administrador'}</span></div><button class="btn line sm" id="salir">${icon('logout', 18)}Cerrar sesión</button></div>
       <div class="grid g2" style="align-items:start">
-        <section class="card stack" style="padding:24px;gap:10px"><h3>Mis datos</h3>
-          ${u.negocio ? `<div class="between"><span class="muted">Negocio</span><span>${esc(u.negocio)}</span></div><div class="between"><span class="muted">RUC</span><span>${esc(u.ruc)}</span></div>` : ''}
-          <div class="between"><span class="muted">Nombre</span><span>${esc(u.nombre)}</span></div>
-          <div class="between"><span class="muted">Correo</span><span>${esc(u.correo)}</span></div>
-          <div class="between"><span class="muted">Teléfono</span><span>${esc(u.telefono)}</span></div>
-          <div class="between"><span class="muted">Dirección</span><span style="text-align:right">${esc(u.direccion)}</span></div></section>
-        <section class="card stack" style="padding:24px;gap:10px"><h3>Forma de pago guardada</h3>
-          ${u.pago ? `<div class="between"><span class="row">${icon('card', 22)}${esc(u.pago.marca)} •••• ${esc(u.pago.ultimos)}</span><span class="muted small">Vence ${esc(u.pago.vence)}</span></div><button class="link" id="quitar-pago" style="align-self:flex-start">Quitar tarjeta</button>`
-            : '<p class="muted">No tienes una tarjeta guardada. Puedes guardarla al pagar.</p>'}</section>
+        <div class="stack" style="gap:20px">${datos}${clave}</div>
+        ${pago}
       </div>
       <section class="sec"><h2 style="margin-bottom:16px">Mis pedidos</h2>
         ${pedidos.length ? `<div class="card scroll"><table class="list"><thead><tr><th>Pedido</th><th>Fecha</th><th>Estado</th><th class="num">Total</th><th></th></tr></thead><tbody>
@@ -540,13 +658,62 @@ Vistas.cuenta = {
         </tbody></table></div>` : '<p class="muted">Todavía no tienes pedidos.</p>'}</section>
       ${Store.esNegocio(u) ? `<section class="sec"><h2 style="margin-bottom:16px">Mis solicitudes al por mayor</h2>
         ${sol.length ? `<div class="card scroll"><table class="list"><thead><tr><th>Solicitud</th><th>Producto</th><th class="num">Unidades</th><th class="num">Total</th><th>Estado</th></tr></thead><tbody>
-          ${sol.map((s) => `<tr><td><b>${s.id}</b><div class="small muted">${fechaLarga(s.fecha)}</div></td><td>${esc(s.producto)}</td><td class="num">${s.cantidad}</td><td class="num">${dinero(s.total)}</td><td><span class="pill ${s.estado === 'Aprobada' ? 'p-green' : s.estado === 'Rechazada' ? 'p-red' : 'p-amber'}">${s.estado}</span></td></tr>`).join('')}
+          ${sol.map((x) => `<tr><td><b>${x.id}</b><div class="small muted">${fechaLarga(x.fecha)}</div></td><td>${esc(x.producto)}</td><td class="num">${x.cantidad}</td><td class="num">${dinero(x.total)}</td><td><span class="pill ${x.estado === 'Aprobada' ? 'p-green' : x.estado === 'Rechazada' ? 'p-red' : 'p-amber'}">${x.estado}</span></td></tr>`).join('')}
         </tbody></table></div>` : '<p class="muted">Todavía no tienes solicitudes. Entra al detalle de un producto y elige "Compra al por mayor".</p>'}</section>` : ''}
     </div>`;
   },
   init() {
+    const u = Store.usuario();
+    if (!u) return;
     document.getElementById('salir')?.addEventListener('click', () => { Store.cerrarSesion(); App.ir('#/'); aviso('Cerraste sesión'); });
-    document.getElementById('quitar-pago')?.addEventListener('click', () => { Store.quitarPagoGuardado(); App.render(); aviso('Tarjeta eliminada'); });
+    document.getElementById('quitar-pago')?.addEventListener('click', () => modal({
+      icono: 'card', tono: 'ambar', titulo: '¿Quitar la tarjeta guardada?', texto: 'Tendrás que escribir los datos de tu tarjeta la próxima vez que pagues.',
+      botones: [{ texto: 'Sí, quitar', clase: 'danger', accion: () => { Store.quitarPagoGuardado(); App.render(); aviso('Tarjeta eliminada'); } }, { texto: 'Cancelar', clase: 'line' }]
+    }));
+
+    const fd = document.getElementById('f-datos');
+    if (fd) {
+      fd.querySelector('input')?.focus();
+      fd.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const r = { nombre: reglas.requerido, telefono: reglas.telefono, correo: reglas.correo, direccion: reglas.requerido };
+        if (fd.negocio) Object.assign(r, { negocio: reglas.requerido, ruc: reglas.requerido });
+        if (!validar(fd, r)) return;
+        const res = Store.actualizarPerfil({
+          nombre: fd.nombre.value, telefono: fd.telefono.value, correo: fd.correo.value, direccion: fd.direccion.value,
+          negocio: fd.negocio?.value, ruc: fd.ruc?.value
+        });
+        if (!res.ok) { marcarError(fd.correo, 'Este correo o RUC ya pertenece a otra cuenta.'); fd.correo.focus(); return; }
+        location.hash = '#/cuenta';
+        aviso(`${icon('check', 20)}<span>Datos actualizados</span>`);
+      });
+    }
+
+    const fc = document.getElementById('f-clave');
+    if (fc) {
+      fc.actual.focus();
+      fc.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!validar(fc, { actual: reglas.requerido, nueva: reglas.clave, repite: (v, f) => (v === f.nueva.value ? '' : 'Las contraseñas no coinciden.') })) return;
+        if (!Store.cambiarClave(fc.actual.value, fc.nueva.value).ok) { marcarError(fc.actual, 'La contraseña actual no es correcta.'); fc.actual.focus(); return; }
+        location.hash = '#/cuenta';
+        aviso(`${icon('check', 20)}<span>Contraseña cambiada</span>`);
+      });
+    }
+
+    const ft = document.getElementById('f-tarjeta');
+    if (ft) {
+      formatoTarjeta(ft.numero); formatoVence(ft.vence);
+      ft.numero.focus();
+      ft.addEventListener('submit', (e) => {
+        e.preventDefault();
+        if (!validar(ft, { titular: reglas.requerido, numero: reglas.tarjeta, vence: reglas.vence })) return;
+        const num = ft.numero.value.replace(/\D/g, '');
+        Store.guardarPago({ marca: marcaTarjeta(num), ultimos: num.slice(-4), vence: ft.vence.value, titular: ft.titular.value.trim() });
+        location.hash = '#/cuenta';
+        aviso(`${icon('check', 20)}<span>Tarjeta guardada</span>`);
+      });
+    }
   }
 };
 

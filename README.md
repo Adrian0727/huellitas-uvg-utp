@@ -137,6 +137,11 @@ Cada vez que hagas `git push`, Vercel publica la nueva versión solo.
 
 Si cambias `data.js` y no ves el cambio, presiona "Reiniciar datos de prueba", porque el navegador guarda la versión anterior.
 
+## Recuperar contraseña (modo de prueba)
+En **Iniciar sesión → ¿Olvidaste tu contraseña?** el usuario escribe su correo y recibe un código de 6 dígitos que vence en 10 minutos (máximo 5 intentos).
+Como la página no tiene servidor de correo, el código **se muestra en pantalla** con un aviso de "modo de prueba".
+En un sistema real, el código se enviaría al correo desde un servidor o con un servicio como EmailJS, y la página nunca lo mostraría.
+
 ## Fotos de los productos
 Las fotos vienen de **Unsplash** (gratuitas, licencia en unsplash.com/license) y se cargan desde internet.
 Están en `js/data.js`, en el campo `fotos` de cada producto. Si una foto no carga, la página muestra la ilustración de línea en su lugar.
