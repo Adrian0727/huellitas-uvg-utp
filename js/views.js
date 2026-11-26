@@ -380,27 +380,65 @@ Vistas.pago = {
 
 /* ===================== FACTURA / PAGO APROBADO (postcondición CU-03) ===================== */
 Vistas.factura = {
-  titulo: 'Pago aprobado',
+  titulo: 'Factura',
   html([pid]) {
     const p = Store.pedido(pid);
     if (!p) return Vistas.noEncontrado.html();
-    return `<div class="wrap stack" style="align-items:center;text-align:center;padding-top:56px;gap:16px">
-      <div class="no-print" style="width:84px;height:84px;border-radius:999px;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center">${icon('check', 42)}</div>
-      <h1 class="no-print" style="font-size:44px">Pago aprobado</h1>
-      <p class="lead no-print" style="max-width:520px">Tu pedido <b>${p.id}</b> está pagado. Esta es tu factura digital.</p>
-      <section class="card stack" style="width:100%;max-width:560px;padding:28px;gap:12px;text-align:left">
-        <div class="between"><div><h3>Factura digital</h3><span class="small muted">${p.id} · ${fechaLarga(p.fecha)}</span></div><span class="pill p-green">${p.estado}</span></div>
-        <div class="small muted">Huellitas S.A. · RUC 155000000-2-2026<br>Cliente: ${esc((Store.usuario() || {}).nombre || '')}</div>
-        <div class="hr"></div>
-        ${p.items.map((i) => `<div class="between"><span>${i.cantidad} × ${esc(i.nombre)}</span><span>${dinero(i.precio * i.cantidad)}</span></div>`).join('')}
-        <div class="hr"></div>
-        <div class="between"><span class="muted">Subtotal</span><span>${dinero(p.subtotal)}</span></div>
-        <div class="between"><span class="muted">Envío</span><span>${p.envio ? dinero(p.envio) : 'Gratis'}</span></div>
-        <div class="between"><span class="muted">ITBMS 7 %</span><span>${dinero(p.impuesto)}</span></div>
-        <div class="between"><b>Total pagado</b><b style="font-size:24px">${dinero(p.total)}</b></div>
-        <div class="hr"></div>
-        <div class="small muted">Método: ${esc(p.metodo)} · Autorización ${p.autorizacion}<br>Entrega: ${esc(p.entrega)}</div>
-      </section>
+    const c = p.cliente || Store.usuario() || {};
+    const filas = p.items.map((i) => `<tr>
+      <td>${esc(i.nombre)}</td><td class="num">${i.cantidad}</td><td class="num">${dinero(i.precio)}</td><td class="num">${dinero(i.precio * i.cantidad)}</td></tr>`).join('');
+    return `<div class="wrap stack" style="align-items:center;padding-top:48px;gap:16px">
+      <div class="no-print stack" style="align-items:center;text-align:center;gap:12px">
+        <div style="width:84px;height:84px;border-radius:999px;background:var(--green-soft);color:var(--green);display:flex;align-items:center;justify-content:center">${icon('check', 42)}</div>
+        <h1 style="font-size:44px">Pago aprobado</h1>
+        <p class="lead" style="max-width:520px">Tu pedido <b>${p.id}</b> está pagado. Esta es tu factura digital.</p>
+      </div>
+
+      <article class="card factura" aria-label="Factura ${p.id}">
+        <header class="between factura-top">
+          <div class="row" style="gap:12px">
+            <div class="factura-logo">${icon('leaf', 30)}</div>
+            <div><div style="font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--green)">Huellitas</div>
+              <div class="small muted">Tienda de artículos para mascotas</div></div>
+          </div>
+          <div style="text-align:right">
+            <div class="small muted">Factura digital</div>
+            <div style="font-size:20px;font-weight:700">${p.id}</div>
+            <span class="pill p-green" style="margin-top:6px">${icon('check', 14)}${p.estado}</span>
+          </div>
+        </header>
+
+        <div class="grid g2 factura-datos">
+          <div><div class="factura-lbl">Emitida por</div>
+            <b>Huellitas S.A.</b><br>RUC 155000000-2-2026<br>Ciudad de Panamá, Panamá<br>hola@huellitas.com</div>
+          <div><div class="factura-lbl">Facturada a</div>
+            <b>${esc(c.negocio || c.nombre || '')}</b><br>
+            ${c.negocio ? `${esc(c.nombre)}<br>RUC ${esc(c.ruc)}<br>` : ''}${esc(c.correo || '')}${c.telefono ? `<br>${esc(c.telefono)}` : ''}</div>
+          <div><div class="factura-lbl">Fecha</div>${fechaLarga(p.fecha)}</div>
+          <div><div class="factura-lbl">Entrega</div>${esc(p.entrega)}</div>
+        </div>
+
+        <table class="list factura-tabla">
+          <thead><tr><th>Producto</th><th class="num">Cant.</th><th class="num">Precio</th><th class="num">Importe</th></tr></thead>
+          <tbody>${filas}</tbody>
+        </table>
+
+        <div class="factura-totales">
+          <div class="between"><span class="muted">Subtotal</span><span>${dinero(p.subtotal)}</span></div>
+          <div class="between"><span class="muted">Envío</span><span>${p.envio ? dinero(p.envio) : 'Gratis'}</span></div>
+          <div class="between"><span class="muted">ITBMS 7 %</span><span>${dinero(p.impuesto)}</span></div>
+          <div class="hr"></div>
+          <div class="between"><b style="font-size:17px">Total pagado</b><b style="font-size:26px">${dinero(p.total)}</b></div>
+        </div>
+
+        <div class="factura-pago small"><b>Método de pago:</b> ${esc(p.metodo)} · <b>Autorización:</b> ${p.autorizacion}</div>
+
+        <footer class="factura-pie">
+          <span class="row" style="gap:8px;color:var(--green)">${icon('leaf', 18)}<b>¡Gracias por tu compra!</b></span>
+          <span class="small muted">Tu pedido viaja en empaque compostable. Consulta tus pedidos en Mi cuenta.</span>
+        </footer>
+      </article>
+
       <div class="row no-print" style="flex-wrap:wrap;justify-content:center"><a class="btn pri" href="#/">Volver a la tienda</a><button class="btn line" onclick="window.print()">${icon('receipt', 20)}Imprimir o guardar PDF</button></div>
       <p class="row small muted no-print">${icon('recycle', 16)}El inventario ya se actualizó con tu compra.</p>
     </div>`;

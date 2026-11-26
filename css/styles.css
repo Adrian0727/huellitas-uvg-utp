@@ -224,6 +224,18 @@ table.list td.num, table.list th.num { text-align: right; white-space: nowrap; }
 footer { margin-top: 72px; background: #fff; border-top: 1px solid var(--line); }
 footer .wrap { padding-top: 32px; padding-bottom: 32px; display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; font-size: 14px; color: var(--muted); }
 
+/* ---------- Factura ---------- */
+.factura { width: 100%; max-width: 680px; padding: 32px; display: flex; flex-direction: column; gap: 24px; }
+.factura-top { padding-bottom: 20px; border-bottom: 2px solid var(--green); align-items: flex-start; }
+.factura-logo { width: 52px; height: 52px; border-radius: 14px; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; }
+.factura-datos { gap: 16px 24px; font-size: 14px; line-height: 1.6; }
+.factura-lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 2px; }
+.factura-tabla th { background: var(--green-tint); }
+.factura-tabla td:first-child { font-weight: 500; }
+.factura-totales { margin-left: auto; width: 100%; max-width: 300px; display: flex; flex-direction: column; gap: 8px; }
+.factura-pago { padding: 12px 14px; border-radius: 12px; background: #f7f6f2; color: var(--ink-2); }
+.factura-pie { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding-top: 16px; border-top: 1px dashed var(--line-2); }
+
 /* ---------- Celular ---------- */
 @media (max-width: 900px) {
   .nav { display: none; }
@@ -250,6 +262,10 @@ footer .wrap { padding-top: 32px; padding-bottom: 32px; display: flex; flex-wrap
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
 }
 @media print {
-  .top, footer, .no-print { display: none !important; }
+  .top, #pie, .no-print, .toast, .overlay { display: none !important; }
   body { background: #fff; }
+  * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .wrap { padding-top: 0 !important; }
+  .factura { border: 0; max-width: none; padding: 8px 0; }
+  .factura .g2 { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }

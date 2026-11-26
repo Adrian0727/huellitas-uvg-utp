@@ -266,6 +266,7 @@ const Store = (() => {
     const pedido = {
       id: 'HU-' + String(db.contador).padStart(6, '0'),
       usuarioId: u.id, fecha: new Date().toISOString(), estado: 'Pagado',
+      cliente: { nombre: u.nombre, correo: u.correo, telefono: u.telefono, negocio: u.negocio || '', ruc: u.ruc || '' },
       items: lineas.map((l) => ({ id: l.id, nombre: l.producto.nombre, precio: l.producto.precio, cantidad: l.cantidad })),
       ...t, metodo: datos.etiqueta, entrega, autorizacion: r.autorizacion
     };
