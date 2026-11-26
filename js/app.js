@@ -28,9 +28,19 @@ const App = (() => {
     return { nombre: 'noEncontrado', params: [], query: {} };
   }
 
+  /* Navega a una ruta. Si ya estás en ella, el navegador no avisa del cambio,
+     así que se vuelve a dibujar a mano (antes fallaba al cerrar sesión en el inicio). */
+  function ir(hash) {
+    const actual = location.hash || '#/';
+    if (actual === hash || (hash === '#/' && actual === '#')) { render(); window.scrollTo(0, 0); }
+    else location.hash = hash;
+  }
+
   /* ---------- Encabezado ---------- */
+  let sesionDibujada;
   function encabezado() {
     const u = Store.usuario();
+    sesionDibujada = u ? u.id : null;
     const { nombre, query } = leerRuta();
     const activo = (cond) => (cond ? 'class="on"' : '');
     const n = Store.cantidadCarrito();
@@ -69,7 +79,7 @@ const App = (() => {
     if (bc) {
       const menu = document.getElementById('menu-cuenta');
       bc.addEventListener('click', (e) => { e.stopPropagation(); menu.classList.toggle('open'); bc.setAttribute('aria-expanded', menu.classList.contains('open')); });
-      document.getElementById('btn-salir').addEventListener('click', () => { Store.cerrarSesion(); location.hash = '#/'; aviso('Cerraste sesión'); });
+      document.getElementById('btn-salir').addEventListener('click', () => { Store.cerrarSesion(); ir('#/'); aviso('Cerraste sesión'); });
     }
   }
 
@@ -150,7 +160,7 @@ const App = (() => {
     document.getElementById('reiniciar').addEventListener('click', () => modal({
       icono: 'alert', tono: 'ambar', titulo: '¿Reiniciar la tienda?',
       texto: 'Se borran pedidos, cuentas nuevas, productos publicados y el carrito. Vuelven los datos de prueba.',
-      botones: [{ texto: 'Sí, reiniciar', clase: 'danger', accion: () => { Store.reiniciar(); location.hash = '#/'; render(); aviso('Datos reiniciados'); } }, { texto: 'Cancelar', clase: 'line' }]
+      botones: [{ texto: 'Sí, reiniciar', clase: 'danger', accion: () => { Store.reiniciar(); ir('#/'); aviso('Datos reiniciados'); } }, { texto: 'Cancelar', clase: 'line' }]
     }));
   }
 
@@ -170,6 +180,9 @@ const App = (() => {
     window.addEventListener('hashchange', () => { cerrarModal(); render(); window.scrollTo(0, 0); document.getElementById('main').focus({ preventScroll: true }); });
     document.addEventListener('click', () => document.getElementById('menu-cuenta')?.classList.remove('open'));
     document.addEventListener('store:cambio', () => {
+      // Si alguien entra o sale de su cuenta, se redibuja la barra superior
+      const u = Store.usuario();
+      if ((u ? u.id : null) !== sesionDibujada) encabezado();
       // Actualiza el contador del carrito sin recargar toda la página (CU-02 paso 3)
       const n = Store.cantidadCarrito();
       const enlace = document.querySelector('.tools a[href="#/carrito"]');
@@ -183,7 +196,7 @@ const App = (() => {
     render();
   }
 
-  return { render, iniciar };
+  return { render, iniciar, ir };
 })();
 
 App.iniciar();

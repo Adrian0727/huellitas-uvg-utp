@@ -545,7 +545,7 @@ Vistas.cuenta = {
     </div>`;
   },
   init() {
-    document.getElementById('salir')?.addEventListener('click', () => { Store.cerrarSesion(); location.hash = '#/'; aviso('Cerraste sesión'); });
+    document.getElementById('salir')?.addEventListener('click', () => { Store.cerrarSesion(); App.ir('#/'); aviso('Cerraste sesión'); });
     document.getElementById('quitar-pago')?.addEventListener('click', () => { Store.quitarPagoGuardado(); App.render(); aviso('Tarjeta eliminada'); });
   }
 };
