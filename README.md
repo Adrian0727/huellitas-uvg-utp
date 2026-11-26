@@ -137,6 +137,17 @@ Cada vez que hagas `git push`, Vercel publica la nueva versión solo.
 
 Si cambias `data.js` y no ves el cambio, presiona "Reiniciar datos de prueba", porque el navegador guarda la versión anterior.
 
+## Fotos de los productos
+Las fotos vienen de **Unsplash** (gratuitas, licencia en unsplash.com/license) y se cargan desde internet.
+Están en `js/data.js`, en el campo `fotos` de cada producto. Si una foto no carga, la página muestra la ilustración de línea en su lugar.
+
+**Para cambiar una foto:**
+1. Busca una foto en unsplash.com y ábrela.
+2. Clic derecho sobre la foto → **Copiar dirección de imagen**.
+3. De ese link copia solo el código que va después de `photo-` y antes del `?` (por ejemplo `1601758123927-4f7acc7da589`).
+4. En `js/data.js` reemplaza el código dentro de `FOTO('...')` del producto.
+5. Guarda, sube los cambios y presiona "Reiniciar datos de prueba" en la página.
+
 ## Seguridad (lo que hace y lo que falta en un sistema real)
 - El texto que escriben los usuarios se escapa antes de mostrarse, para evitar inyección de HTML (XSS).
 - De las tarjetas solo se guarda la marca y los últimos 4 dígitos. Nunca el número completo ni el CVV.

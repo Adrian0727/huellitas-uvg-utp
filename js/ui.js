@@ -24,8 +24,12 @@ const nombreNecesidad = (id) => (CATEGORIAS.necesidades.find((e) => e.id === id)
 
 /* Imagen del producto: foto si el proveedor la subió, si no la ilustración */
 function imagenProducto(p, tam = 110) {
-  if (p.fotos && p.fotos.length) return `<img src="${p.fotos[0]}" alt="${esc(p.nombre)}">`;
+  // La ilustración queda debajo: si la foto no carga, se borra y se ve el dibujo
+  if (p.fotos && p.fotos.length) return art(p.arte, tam) + foto(p.fotos[0], p.nombre);
   return art(p.arte, tam);
+}
+function foto(src, alt) {
+  return `<img src="${esc(src)}" alt="${esc(alt)}" loading="lazy" onerror="this.remove()">`;
 }
 
 function etiquetaProducto(p) {

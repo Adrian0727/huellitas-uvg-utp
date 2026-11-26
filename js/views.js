@@ -26,7 +26,7 @@ Vistas.inicio = {
         <div class="row" style="flex-wrap:wrap"><a class="btn pri" href="#/catalogo">Ver tienda</a><a class="btn line" href="#/catalogo?disp=stock">Disponibles hoy</a></div>
       </div>
       <div style="flex:1 1 440px;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px">
-        <div class="thumb t1" style="grid-row:span 2;min-height:340px;flex-direction:column;gap:10px">${art('bed', 170)}<span class="pill" style="background:#fff">Descanso</span></div>
+        <div class="thumb t1" style="grid-row:span 2;min-height:340px">${art('bed', 170)}${foto(FOTO_PORTADA, 'Un perro y un gato descansando juntos')}</div>
         <div class="card stack" style="padding:22px;gap:8px;justify-content:center"><span style="color:var(--green)">${icon('truck', 28)}</span><h3>Envío local en 24 a 48 h</h3><span class="muted small">Fuera de cobertura, retiras en un centro aliado.</span></div>
         <div class="card stack" style="padding:22px;gap:8px;justify-content:center;background:var(--green);border-color:var(--green);color:#fff"><span>${icon('recycle', 28)}</span><h3>Materiales responsables</h3><span class="small" style="color:#d6e6dc">Fibras naturales y recicladas.</span></div>
       </div>
@@ -142,8 +142,8 @@ Vistas.producto = {
       <p class="small muted" style="margin-bottom:20px"><a href="#/">Inicio</a> › <a href="#/catalogo?especie=${p.especie}">${nombreEspecie(p.especie)}</a> › ${nombreNecesidad(p.necesidad)}</p>
       <div style="display:flex;flex-wrap:wrap;gap:48px">
         <div style="flex:1 1 420px" class="stack">
-          <div class="thumb ${p.tinte}" id="foto-principal" style="aspect-ratio:1/0.95">${fotos ? `<img src="${fotos[0]}" alt="${esc(p.nombre)}">` : art(p.arte, 240)}</div>
-          ${fotos && fotos.length > 1 ? `<div class="row">${fotos.map((f, i) => `<button class="thumb t1" data-foto="${i}" style="width:84px;height:84px;border:0;padding:0" aria-label="Ver foto ${i + 1}"><img src="${f}" alt=""></button>`).join('')}</div>` : ''}
+          <div class="thumb ${p.tinte}" id="foto-principal" style="aspect-ratio:1/0.95">${art(p.arte, 240)}${fotos ? foto(fotos[0], p.nombre) : ''}</div>
+          ${fotos && fotos.length > 1 ? `<div class="row">${fotos.map((f, i) => `<button class="thumb t1" data-foto="${i}" style="width:84px;height:84px;border:0;padding:0" aria-label="Ver foto ${i + 1}">${foto(f, '')}</button>`).join('')}</div>` : ''}
         </div>
         <div style="flex:1 1 400px" class="stack">
           <div class="chips">
@@ -180,7 +180,7 @@ Vistas.producto = {
     const p = Store.producto(pid);
     if (!p) return;
     document.querySelectorAll('[data-foto]').forEach((b) => b.addEventListener('click', () => {
-      document.getElementById('foto-principal').innerHTML = `<img src="${p.fotos[+b.dataset.foto]}" alt="${esc(p.nombre)}">`;
+      document.getElementById('foto-principal').innerHTML = art(p.arte, 240) + foto(p.fotos[+b.dataset.foto], p.nombre);
     }));
     document.getElementById('btn-mayoreo')?.addEventListener('click', () => modal({
       icono: 'store', tono: 'ambar', titulo: 'Exclusivo para negocios',

@@ -5,7 +5,7 @@
    ========================================================= */
 
 const Store = (() => {
-  const KEY = 'huellitas_v1';
+  const KEY = 'huellitas_v2';
   let db;
 
   function nuevo() {

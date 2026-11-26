@@ -145,7 +145,7 @@ const App = (() => {
       <div class="row" style="color:var(--green);font-weight:700">${icon('leaf', 20)}Huellitas</div>
       <div class="row">${icon('recycle', 18)}Empaques compostables y reciclables</div>
       <div class="row">${icon('truck', 18)}Envío local y centros de entrega aliados</div>
-      <div class="row" style="flex-wrap:wrap">Proyecto COIL · UVG × UTP · <button class="link small" id="reiniciar">Reiniciar datos de prueba</button></div>
+      <div class="row" style="flex-wrap:wrap">Proyecto COIL · UVG × UTP · Fotos: <a class="link small" href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a> · <button class="link small" id="reiniciar">Reiniciar datos de prueba</button></div>
     </div>`;
     document.getElementById('reiniciar').addEventListener('click', () => modal({
       icono: 'alert', tono: 'ambar', titulo: '¿Reiniciar la tienda?',
