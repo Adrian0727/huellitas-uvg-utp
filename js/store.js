@@ -27,6 +27,18 @@ const Store = (() => {
     } catch (e) {
       db = nuevo();
     }
+    sincronizarCatalogo();
+  }
+
+  /* Si cambias un producto en data.js (nombre, foto, categoría, precio…), el cambio se aplica
+     sin borrar las cuentas, pedidos ni el stock que ya existen en el navegador. */
+  function sincronizarCatalogo() {
+    const CAMPOS = ['nombre', 'precio', 'especie', 'necesidad', 'arte', 'tinte', 'mayoreo', 'vendedor', 'vendedorId', 'material', 'medidas', 'descripcion', 'fotos', 'llegada'];
+    PRODUCTOS_INICIALES.forEach((base) => {
+      const p = db.productos.find((x) => x.id === base.id);
+      if (!p) { db.productos.push(JSON.parse(JSON.stringify(base))); return; }
+      CAMPOS.forEach((k) => { if (base[k] !== undefined && !(k === 'llegada' && p.estado !== 'pronto')) p[k] = JSON.parse(JSON.stringify(base[k])); });
+    });
   }
 
   function guardar() {
