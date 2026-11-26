@@ -59,7 +59,7 @@ const App = (() => {
       cuenta = `<a class="hide-md" href="#/login" style="font-size:15px;font-weight:500">Iniciar sesión</a><a class="btn soft sm" href="#/registro">Registrarse</a>`;
     }
     document.getElementById('top').innerHTML = `<div class="wrap">
-      <a class="logo" href="#/" aria-label="Huellitas, inicio">${icon('leaf', 24)}<span>Huellitas</span></a>
+      <a class="logo" href="#/" aria-label="Huellitas, inicio">${logo(34)}<span>Huellitas</span></a>
       <nav class="nav" aria-label="Principal">
         <a href="#/catalogo" ${activo(nombre === 'catalogo' && !query.especie && !query.mayoreo)}>Tienda</a>
         ${CATEGORIAS.especies.map((e) => `<a href="#/catalogo?especie=${e.id}" ${activo(query.especie === e.id)}>${e.nombre}</a>`).join('')}
@@ -153,7 +153,7 @@ const App = (() => {
 
   function pie() {
     document.getElementById('pie').innerHTML = `<div class="wrap">
-      <div class="row" style="color:var(--green);font-weight:700">${icon('leaf', 20)}Huellitas</div>
+      <div class="row" style="color:var(--green);font-weight:700;gap:8px">${logo(26)}Huellitas</div>
       <div class="row">${icon('recycle', 18)}Empaques compostables y reciclables</div>
       <div class="row">${icon('truck', 18)}Envío local y centros de entrega aliados</div>
       <div class="row" style="flex-wrap:wrap">Proyecto COIL · UVG × UTP · Fotos: <a class="link small" href="https://unsplash.com" target="_blank" rel="noopener">Unsplash</a> · <button class="link small" id="reiniciar">Reiniciar datos de prueba</button></div>

@@ -61,3 +61,19 @@ const ARTS = {
 function art(key, size = 110) {
   return `<svg class="ico" viewBox="0 0 100 100" style="width:${size}px;height:${size}px;stroke-width:1.75" aria-hidden="true">${ARTS[key] || ARTS.box}</svg>`;
 }
+
+/* Logo de Huellitas: huella de mascota con una hoja en la almohadilla (toque ecológico).
+   También está como archivo en img/logo.svg */
+function logo(size = 36) {
+  return `<svg viewBox="0 0 24 24" style="width:${size}px;height:${size}px;flex:none" role="img" aria-label="Huellitas">
+    <rect width="24" height="24" rx="7" fill="#2f6b4f"/>
+    <g fill="#fff">
+      <ellipse cx="6.3" cy="10.6" rx="1.85" ry="2.3" transform="rotate(-22 6.3 10.6)"/>
+      <ellipse cx="9.7" cy="6.9" rx="1.9" ry="2.35" transform="rotate(-8 9.7 6.9)"/>
+      <ellipse cx="14.3" cy="6.9" rx="1.9" ry="2.35" transform="rotate(8 14.3 6.9)"/>
+      <ellipse cx="17.7" cy="10.6" rx="1.85" ry="2.3" transform="rotate(22 17.7 10.6)"/>
+      <path d="M12 11.4c-3.3 0-6.1 3.5-6.1 6 0 1.7 1.4 2.6 3 2.6 1.3 0 2-.7 3.1-.7s1.8.7 3.1.7c1.6 0 3-.9 3-2.6 0-2.5-2.8-6-6.1-6z"/>
+    </g>
+    <path d="M12 19.2v-5.4M12 17.2l-1.7-1.3M12 15.6l1.7-1.3" stroke="#2f6b4f" stroke-width=".95" stroke-linecap="round" fill="none"/>
+  </svg>`;
+}

@@ -56,8 +56,9 @@ h3 { font-size: 19px; line-height: 1.25; letter-spacing: -.01em; font-weight: 60
 /* ---------- Encabezado ---------- */
 .top { position: sticky; top: 0; z-index: 20; background: rgba(255, 255, 255, .92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--line); }
 .top .wrap { height: 68px; display: flex; align-items: center; gap: 24px; }
-.logo { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: 20px; letter-spacing: -.02em; color: var(--green); }
-.nav { display: flex; gap: 22px; font-size: 15px; color: var(--ink-2); }
+.logo { display: flex; align-items: center; gap: 10px; font-weight: 700; font-size: 20px; letter-spacing: -.02em; color: var(--green); }
+.nav { display: flex; gap: 18px; font-size: 15px; color: var(--ink-2); }
+.top a, .top button { white-space: nowrap; }
 .nav a:hover, .nav a.on { color: var(--ink); }
 .nav a.on { font-weight: 600; }
 .tools { margin-left: auto; display: flex; align-items: center; gap: 10px; }
@@ -68,7 +69,7 @@ h3 { font-size: 19px; line-height: 1.25; letter-spacing: -.01em; font-weight: 60
 @keyframes bump { 50% { transform: scale(1.35); } }
 
 /* Buscador con asistente (RF-05, RF-06) */
-.search { position: relative; width: 260px; }
+.search { position: relative; width: 220px; }
 .search input { width: 100%; height: 42px; border-radius: 999px; border: 1px solid transparent; background: #f2f1ec; padding: 0 16px 0 40px; font-size: 15px; }
 .search input:focus { background: #fff; border-color: var(--green); outline: none; }
 .search > .ico { position: absolute; left: 14px; top: 11px; width: 19px; height: 19px; color: var(--muted); }
@@ -227,7 +228,6 @@ footer .wrap { padding-top: 32px; padding-bottom: 32px; display: flex; flex-wrap
 /* ---------- Factura ---------- */
 .factura { width: 100%; max-width: 680px; padding: 32px; display: flex; flex-direction: column; gap: 24px; }
 .factura-top { padding-bottom: 20px; border-bottom: 2px solid var(--green); align-items: flex-start; }
-.factura-logo { width: 52px; height: 52px; border-radius: 14px; background: var(--green); color: #fff; display: flex; align-items: center; justify-content: center; }
 .factura-datos { gap: 16px 24px; font-size: 14px; line-height: 1.6; }
 .factura-lbl { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .04em; color: var(--muted); margin-bottom: 2px; }
 .factura-tabla th { background: var(--green-tint); }
@@ -237,8 +237,10 @@ footer .wrap { padding-top: 32px; padding-bottom: 32px; display: flex; flex-wrap
 .factura-pie { display: flex; flex-direction: column; align-items: center; gap: 4px; text-align: center; padding-top: 16px; border-top: 1px dashed var(--line-2); }
 
 /* ---------- Celular ---------- */
-@media (max-width: 900px) {
+@media (max-width: 1100px) {
   .nav { display: none; }
+}
+@media (max-width: 900px) {
   .search { width: auto; flex: 1; }
   .hide-md { display: none !important; }
   .carousel > * { flex-basis: calc((100% - 20px) / 2); }

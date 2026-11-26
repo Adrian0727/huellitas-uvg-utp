@@ -397,7 +397,7 @@ Vistas.factura = {
       <article class="card factura" aria-label="Factura ${p.id}">
         <header class="between factura-top">
           <div class="row" style="gap:12px">
-            <div class="factura-logo">${icon('leaf', 30)}</div>
+            ${logo(52)}
             <div><div style="font-size:24px;font-weight:700;letter-spacing:-.02em;color:var(--green)">Huellitas</div>
               <div class="small muted">Tienda de artículos para mascotas</div></div>
           </div>
